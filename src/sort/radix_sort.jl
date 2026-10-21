@@ -11,6 +11,10 @@
 
 import Atomix
 
+# Histogram atomics reserve/count independent items. Workgroup barriers around
+# each histogram phase order initialization, accumulation, and consumption;
+# the individual additions do not require a global sequentially consistent order.
+
 const _RS_BITS = UInt32(8)
 const _RS_SIZE = UInt32(256)
 # Positions are UInt32s, so this many elements at most are sorted together
@@ -95,7 +99,7 @@ end
         i = iblk * NI * ITEMS + ithread + m * NI
         if i < len
             d = Int(_rs_digit(src[i + 1], shift, rev))
-            Atomix.@atomic s_hist[d + 1] += UInt32(1)
+            Atomix.@atomic :monotonic s_hist[d + 1] += UInt32(1)
         end
         m += 1
     end
@@ -207,7 +211,7 @@ end
         p = ithread + m * NI
         d = s_digit[p + 1]
         if d != 0xffffffff
-            Atomix.@atomic s_chist[(p ÷ CH) * Int(_RS_SIZE) + Int(d) + 1] += UInt32(1)
+            Atomix.@atomic :monotonic s_chist[(p ÷ CH) * Int(_RS_SIZE) + Int(d) + 1] += UInt32(1)
         end
         m += 1
     end
@@ -299,7 +303,7 @@ end
             if p < n
                 d = _rs_digit(src[p + 1], sh, rev)
                 s_digit[p + 1] = d
-                Atomix.@atomic s_chist[(p ÷ CH) * Int(_RS_SIZE) + Int(d) + 1] += UInt32(1)
+                Atomix.@atomic :monotonic s_chist[(p ÷ CH) * Int(_RS_SIZE) + Int(d) + 1] += UInt32(1)
             end
             m += 1
         end
