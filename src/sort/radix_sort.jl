@@ -95,7 +95,7 @@ end
         i = iblk * NI * ITEMS + ithread + m * NI
         if i < len
             d = Int(radix_digit(src[i + 1], shift, rev))
-            Atomix.@atomic s_hist[d + 1] += UInt32(1)
+            Atomix.@atomic :monotonic s_hist[d + 1] += UInt32(1)
         end
         m += 1
     end
@@ -207,7 +207,7 @@ end
         p = ithread + m * NI
         d = s_digit[p + 1]
         if d != 0xffffffff
-            Atomix.@atomic s_chunk_counts[(p ÷ CH) * Int(RADIX_DIGITS) + Int(d) + 1] += UInt32(1)
+            Atomix.@atomic :monotonic s_chunk_counts[(p ÷ CH) * Int(RADIX_DIGITS) + Int(d) + 1] += UInt32(1)
         end
         m += 1
     end
@@ -300,7 +300,7 @@ end
             if p < n
                 d = radix_digit(src[p + 1], sh, rev)
                 s_digit[p + 1] = d
-                Atomix.@atomic s_chunk_counts[(p ÷ CH) * Int(RADIX_DIGITS) + Int(d) + 1] +=
+                Atomix.@atomic :monotonic s_chunk_counts[(p ÷ CH) * Int(RADIX_DIGITS) + Int(d) + 1] +=
                     UInt32(1)
             end
             m += 1
